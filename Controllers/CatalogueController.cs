@@ -41,7 +41,15 @@ namespace Products_service.Controllers
         [HttpGet("index")]
         public async Task<ActionResult<Produit>> Index()
         {
-            var cachedProducts = await cache.GetData<List<ProduitDTO>>("catalogue");
+            // 1) Si pas de donnes personalises, comme notre cas touts les users vont avoire la meme liste de prods
+            //string cachingKey = "catalogue";
+
+            // 2) Si Vous voulez cachez des donnes personalises par ex : afficher pour chaque user les listes 
+            // des produits favoris
+            // donc dans le frontend quand on fecth cette action en doit envoyer dans Headers le UserId
+            var userId = Request.Headers["UserId"];
+            var cachingKey = $"catalogue:{userId}";
+            var cachedProducts = await cache.GetData<List<ProduitDTO>>(cachingKey);
             if (cachedProducts != null)
             {
                 return Ok(cachedProducts);
@@ -76,7 +84,7 @@ namespace Products_service.Controllers
                 });
             }
 
-            await cache.SetData("catalogue", produits);
+            await cache.SetData(cachingKey, produits);
             return Ok(produits);
         }
 
